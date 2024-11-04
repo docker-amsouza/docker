@@ -1,0 +1,20 @@
+DEBIAN SERVER versão 12.7.0
+
+
+Criando o container DHCP no Docker
+
+1- criar uma pasta => sudo mkdir -p data
+    • O parâmetro -p significa que, se algum diretório no caminho já existir, ele não dará erro, e se algum diretório intermediário do caminho não existir, ele será criado automaticamente.
+2- touch datmkdir -p data/dhcpd.conf => Confirma que o arquivo de configuração está dentro de data 
+3- chmod 644 data/dhcpd.conf => permiti o container ler o arquivo dhcpd.conf
+2- dentro dessa pasta data vou criar o dhcpd.conf => sudo vi dhcpd.conf
+3- para rodar o container => docker run -it --rm --init --net host -v "$(pwd)/data":/data networkboot/dhcpd eno2
+a interface eno2 e no meu servidor, deverá alterar para a sua interface
+    • docker run: Este comando inicia um novo container Docker.
+    • -it: Esta opção executa o recipiente no modo interativo (-i) e aloca um pseudo-TTY (-t), permitindo que você interaja com o recipiente.
+    • Remove --rm automaticamente o recipiente quando sai, o que é útil para contêineres temporários.
+    • --init: Isso usa o sistema de init do Docker como o PID 1 do contêiner, que pode ajudar a lidar com a colheita de processos zumbis.
+    • --net host: Isso executa o contêiner no espaço do nome da rede do host. Isso significa que o contêiner compartilhará as mesmas interfaces de rede que o host, permitindo que ele acesse e responda diretamente às solicitações DHCP.
+    • -v "$(pwd)/data":/data: Isso monta o datadiretório do seu diretório de trabalho atual (onde você executa o comando) para o /datadiretório dentro do contêiner. É aqui que o servidor DHCP pode ler seus arquivos de configuração e arrendamentos de lojas.
+    • networkboot/dhcpd: Isto especifica a imagem para usar, neste caso, o networkboot/dhcpdimagem para um servidor DHCP.
+    • Esta eno2 é a interface de rede que o servidor DHCP usará para ouvir as solicitações DHCP. 

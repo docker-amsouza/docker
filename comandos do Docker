@@ -1,0 +1,17 @@
+Comandos do docker:
+
+    • docker ps => lista todos os containers em execução
+    • docker images => lista todas as imagens Docker disponíveis localmente 
+    • docker logs <container_id> => comando para inspecionar os logs
+    • docker restart <container_id> => para reiniciar o container
+    • docker stop <container_id> => para parar o container 
+    • docker start <container_id> => para iniciar o container
+    • docker rmi <container_id> => para remover uma imagem local
+    • docker rm <container_id> => para remove um ou mais containers
+    • docker --version => exibi a versão do docker 
+    • docker rename <nome_do_container_antigo nome_do_container_nove> => renomeia um container existente 
+    • docker login => registra ou faz o login em um servidor de registro
+    • docker --help => ver todos os comandos que o Docker possui, tendo o docker instalado
+    • docker network ls => exibe todas as placas de rede Docker
+    • docker creater network <nome da interface> => para criar uma interface 
+
