@@ -13,5 +13,7 @@ Comandos do docker:
     • docker login => registra ou faz o login em um servidor de registro
     • docker --help => ver todos os comandos que o Docker possui, tendo o docker instalado
     • docker network ls => exibe todas as placas de rede Docker
-    • docker creater network <nome da interface> => para criar uma interface 
+    • docker creater network <name_interface> => para criar uma interface 
+    • docker update --restart unless-stopped <name_container> => Esse comando atualiza a política de reinício de um container Docker já existente,
+    garantindo que ele seja reiniciado automaticamente após uma reinicialização do sistema, a menos que tenha sido parado manualmente.
 
