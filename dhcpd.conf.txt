@@ -27,11 +27,9 @@ log-facility local7;
 default-lease-time 600;
 max-lease-time 7200;
 
- Aqui você irá configurar sua rede interna.
+# Aqui você irá configurar sua rede interna.
   subnet 10.5.5.0 netmask 255.255.255.224 {
    range 10.5.5.26 10.5.5.30;
-   option domain-name-servers ns1.internal.example.org;
-   option domain-name "exemple.org";
    option subnet-mask 255.255.255.224;
    option routers 10.5.5.1;
    option broadcast-address 10.5.5.31;
