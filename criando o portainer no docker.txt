@@ -1,0 +1,46 @@
+1- baixar a imagem do Portainer => docker pull portainer/portainer-ce
+    • portainer-ce é a versão Community Edition, que é gratuita.
+
+2- Para rodar o Portainer no Docker 
+docker volume create portainer_data
+docker run -d \
+  -p 9000:9000 \
+  -p 9443:9443 \
+  --name portainer \
+  --restart always \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v portainer_data:/data \
+  portainer/portainer-ce
+
+3- Explicação dos parâmetros:
+    • docker volume create: Este comando cria um volume Docker, que é uma forma de persistir dados entre execuções de containers. Volumes são armazenados em uma área específica do sistema e não são deletados automaticamente quando o container é removido, o que os torna ideais para dados persistentes, como o armazenamento de configurações ou bancos de dados.
+    • portainer_data: Este é o nome que damos ao volume. O Portainer usará esse volume para armazenar suas configurações e dados persistentes, como informações de login e configurações do serviço, que precisam ser preservadas entre reinicializações do container.
+    • docker run: Este comando é usado para rodar um novo container Docker.
+    • -p 9000:9000: Mapeia a porta 9000 do host para a porta 9000 do container, onde a interface web do Portainer será acessada.
+    • -p 9443:9443: Se quiser habilitar a interface segura com HTTPS, você pode usar a porta 9443.
+    • --name portainer: Dá um nome ao container.
+    • --restart always: Faz o container reiniciar automaticamente após falhas ou reinicialização do sistema.
+    • -v /var/run/docker.sock:/var/run/docker.sock: Permite que o Portainer acesse o Docker do host, para que ele possa gerenciar os containers.
+    • -v portainer_data:/data: Armazena dados persistentes do Portainer (informações de configuração, etc.) em um volume Docker, para que eles não se percam se o container for removido.
+    
+4- Acessar o Portainer =:> http://<IP_DO_SEU_SERVIDOR>:9000
+    • No primeiro acesso, você será solicitado a criar um usuário e senha para a interface do Portainer.
+      
+5- Configurar o Docker no Portainer
+    • Após fazer login, você verá uma tela para adicionar o Docker como uma endpoint (ponto de acesso). Você pode escolher o Docker local, já que ele está acessível através do docker.sock:
+    • Selecione "Local" para o Docker local.
+    • Clique em "Connect".
+    • Agora você poderá gerenciar os containers, imagens, volumes e redes do Docker diretamente pela interface do Portainer.
+    
+6- Gerenciar o Docker via Portainer
+    • Com o Portainer em execução, você pode:
+    • Visualizar e gerenciar containers Docker (iniciar, parar, reiniciar).
+    • Ver logs dos containers.
+    • Visualizar e gerenciar imagens Docker.
+    • Criar e gerenciar redes e volumes Docker.
+    • E muito mais!
+    • Resumo:
+    • Portainer é uma ferramenta gráfica para gerenciamento de containers Docker.
+    • A instalação é feita usando a imagem portainer/portainer-ce do Docker Hub.
+    • Basta rodar um container Docker do Portainer e acessar via navegador.
+    • O Portainer permite gerenciar containers, imagens, redes, volumes, e mais, de forma intuitiva.
