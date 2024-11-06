@@ -6,7 +6,7 @@ Comandos do docker:
     • docker restart <container_id> => para reiniciar o container
     • docker stop <container_id> => para parar o container 
     • docker start <container_id> => para iniciar o container
-    • docker rmi <container_id> => para remover uma imagem local
+    • docker rmi <name_image> => para remover uma imagem local
     • docker rm <container_id> => para remove um ou mais containers
     • docker --version => exibi a versão do docker 
     • docker rename <nome_do_container_antigo nome_do_container_nove> => renomeia um container existente 
@@ -17,6 +17,5 @@ Comandos do docker:
     • docker update --restart unless-stopped <container_id> => isso confirma que o contêiner será reiniciado
     automaticamente, a menos que você o pare manualmente	
     • docker exec -it <container_id> /bin/bash => para entrar no container
-    • docker inspect --format '{{.HostConfig.RestartPolicy.Name}}' <container_id> => para verificar se o
-    container irá iniciar automaticamento após a reinicialização do sistema ou alguma falha, o retorno deverá
-    ser: unless-stopped
+    • docker update --restart always <container_name_or_id> => Quando definida como always, isso significa que o Docker irá tentar reiniciar o container sempre que ele parar, seja por falha, reinicialização do Docker ou do sistema.
+    • docker inspect --format '{{.Name}}: {{.HostConfig.RestartPolicy.Name}}' <nome do container> => para verificar se o container irá iniciar automaticamento após a reinicialização do sistema ou alguma falha, o retorno deverá ser: always
