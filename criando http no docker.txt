@@ -2,14 +2,12 @@
 2- mkdir -p ~/meu-webite => crie uma pasta local para o site
     • O parâmetro -p significa que, se algum diretório no caminho já existir, ele não dará erro, e se algum
     diretório intermediário do caminho não existir, ele será criado automaticamente.
-3- docker run --name --restart unless-stopped meu-website -p 8080:80 -v /home/amsouza/meu-website:/usr/local/apache2/htdocs -d httpd
+3- docker run --name http_amsouza --restart always -p 8080:80 -v /home/amsouza/meu-website:/usr/local/apache2/htdocs -d httpd
     • docker run: Este comando inicia um novo container.
-    • --name meu-website: Isso atribui o nome "meu-website" ao contêiner para facilitar o gerenciamento.
-    • --restart unless-stopped: Faz com que o contêiner reinicie automaticamente a menos que seja parado
-    manualmente (em caso de falha ou reinicialização do sistema).
+    • --name http_amsouza.net: Isso atribui o nome "http_amsouza" ao contêiner para facilitar o gerenciamento.
+    • --restart always: Faz o container reiniciar automaticamente após falhas ou reinicialização do sistema.
     • -p 8080:80: Mapa porta 8080 em sua máquina host para porta 80 no recipiente.
-    • -v /home/amsouza/meu-website:/usr/local/apache2/htdocs: Monta seu diretório local para a raiz da web do
-    contêiner, permitindo que você sirva arquivos de lá.
+    • -v /home/amsouza/meu-website:/usr/local/apache2/htdocs: Monta seu diretório local para a raiz da web do contêiner, permitindo que você sirva arquivos de lá.
     • -d: Executa o recipiente no modo desmarcado (em segundo o plano).
     • httpd: Especifica que a imagem oficial do servidor HTTP Apache deve ser usada.
     • http://<ip do seu servidor>:8080/ => para acessar o website <pelo novagador>
