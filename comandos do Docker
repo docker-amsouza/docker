@@ -14,8 +14,7 @@ Comandos do docker:
     • docker --help => ver todos os comandos que o Docker possui, tendo o docker instalado
     • docker network ls => exibe todas as placas de rede Docker
     • docker creater network <name_interface> => para criar uma interface 
-    • docker update --restart unless-stopped <container_id> => isso confirma que o contêiner será reiniciado
-    automaticamente, a menos que você o pare manualmente	
+    • docker update --restart unless-stopped <container_id> => isso confirma que o contêiner será reiniciado automaticamente, a menos que você o pare manualmente	
     • docker exec -it <container_id> /bin/bash => para entrar no container
     • docker update --restart always <container_name_or_id> => Quando definida como always, isso significa que o Docker irá tentar reiniciar o container sempre que ele parar, seja por falha, reinicialização do Docker ou do sistema.
     • docker inspect --format '{{.Name}}: {{.HostConfig.RestartPolicy.Name}}' <nome do container> => para verificar se o container irá iniciar automaticamento após a reinicialização do sistema ou alguma falha, o retorno deverá ser: always
