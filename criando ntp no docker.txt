@@ -1,14 +1,9 @@
-1- docker run -d --name ntp_amsouza --restart unless-stopped --net host --privileged cturra/ntp
-
+1- docker run -d --name ntp_amsouza --restart always --net host --privileged cturra/ntp
     • docker run: Inicia um novo contêiner.
     • -d: Executa o contêiner em modo "detached", ou seja, em segundo plano.
     • --name ntp_amsouza: Nomeia o contêiner como ntp_amsouza.
-    • --restart unless-stopped: Faz com que o contêiner reinicie automaticamente a menos que seja parado
-    manualmente (em caso de falha ou reinicialização do sistema).
-    • --net host: Faz o contêiner usar a rede do host diretamente. Isso é necessário para que o servidor NTP
-    tenha acesso completo à rede e à porta 123/UDP.
-    • --privileged: Concede permissões adicionais ao contêiner, o que é necessário para alguns serviços, como o
-    NTP, para funcionar corretamente (acesso a portas de rede e a outros recursos do sistema).
+    • --restart always: Faz o container reiniciar automaticamente após falhas ou reinicialização do sistema.
+    • --net host: Faz o contêiner usar a rede do host diretamente. Isso é necessário para que o servidor NTP tenha acesso completo à rede e à porta 123/UDP.
+    • --privileged: Concede permissões adicionais ao contêiner, o que é necessário para alguns serviços, como o NTP, para funcionar corretamente (acesso a portas de rede e a outros recursos do sistema).
     • cturra/ntp: A imagem Docker usada para rodar o servidor NTP.
-    
     
