@@ -1,49 +1,90 @@
 Instalando o Cockpit no Docker
 
+    • O Cockpit no Docker não possui um usuário e senha padrão definidos, a menos que você tenha configurado um. Para acessar o Cockpit via Docker, você pode usar autenticação baseada em sistema ou configurar um usuário e senha conforme sua necessidade.
+    • Se o seu container Cockpit está configurado com a autenticação do sistema, você usará as credenciais do usuário no sistema em que o Docker está rodando. Caso contrário, se você preferir uma autenticação personalizada, pode configurar as credenciais diretamente no seu container.
+    • Se você ainda não configurou, você pode adicionar um usuário ao container ou usar variáveis de ambiente para definir um usuário e senha. Aqui está um exemplo de como você pode fazer isso no seu Dockerfile ou ao rodar o container
+
 1- Crie o diretório => sudo mkdir -p cockpit
 2- Dentro do diretório, crei o arquivo => Dockerfile 
     • sudo vi Dockerfile
+    
 # Use Debian como imagem base
 FROM debian:latest
 
 # Atualiza os pacotes e instala o Cockpit
 RUN apt-get update && apt-get install -y apt-transport-https ca-certificates curl && \
-    apt-get install -y cockpit && \
+    apt-get install -y cockpit sudo && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/**
+    rm -rf /var/lib/apt/lists/*
 
 # Expõe a porta 9090 para acesso ao Cockpit
 EXPOSE 9090
 
-# Define as permissões e monta diretórios necessários
+# Cria o script de inicialização para configurar o usuário e a senha
+RUN echo '#!/bin/bash\n\
+  if [ -n "$COCKPIT_USER" ]; then\n\
+    echo "Criando o usuário $COCKPIT_USER"\n\
+    useradd -m $COCKPIT_USER\n\
+    if [ -n "$COCKPIT_PASSWORD" ]; then\n\
+      echo "$COCKPIT_USER:$COCKPIT_PASSWORD" | chpasswd\n\
+    else\n\
+      echo "Senha não fornecida"\n\
+    fi\n\
+  fi\n\
+  # Inicia o Cockpit\n\
+  exec /usr/lib/cockpit/cockpit-ws --no-tls --port 9090' > /entrypoint.sh
+
+# Torna o script executável
+RUN chmod +x /entrypoint.sh
+
+# Define o entrypoint para o script
+ENTRYPOINT ["/entrypoint.sh"]
+
+# Define volumes necessários
 VOLUME ["/run", "/host"]
 
-# Inicia o Cockpit no modo foreground
-CMD ["/usr/lib/cockpit/cockpit-ws", "--no-tls", "--port", "9090"]
 
 Explicação das Instruções:
-    FROM debian
-    : Usa a imagem Debian como base.
-    RUN apt-get update && apt-get install -y cockpit: Atualiza a lista de pacotes e instala o Cockpit.
-    EXPOSE 9090: Expõe a porta 9090 para permitir acesso externo ao Cockpit.
-    VOLUME ["/run", "/host"]: Monta volumes que permitem ao Cockpit acessar informações do sistema.
-    CMD ["/usr/lib/cockpit/cockpit-ws", "--no-tls", "--port", "9090"]: Inicia o Cockpit sem TLS na porta 9090.
+
+	FROM debian: Usa a imagem Debian como base.
+	apt-get update: Atualiza a lista de pacotes disponíveis.
+	apt-get install -y apt-transport-https ca-certificates curl: Instala pacotes necessários para comunicação segura (HTTPS), certificados e curl (um utilitário de rede).
+	apt-get install -y cockpit sudo: Instala o Cockpit, a ferramenta de gerenciamento do sistema, e o sudo para garantir que o usuário tenha permissões adequadas.
+	apt-get clean: Limpa o cache de pacotes para reduzir o tamanho da imagem final.
+rm -rf /var/lib/apt/lists/*: Remove arquivos temporários de listas de pacotes para otimizar ainda mais o tamanho da imagem
+	EXPOSE 9090: Expõe a porta 9090 para permitir acesso externo ao Cockpit.
+	VOLUME ["/run", "/host"]: Monta volumes que permitem ao Cockpit acessar informações do sistema.
+	CMD ["/usr/lib/cockpit/cockpit-ws", "--no-tls", "--port", "9090"]: Inicia o Cockpit sem TLS na porta 9090.  
+	RUN echo '...' > /entrypoint.sh: Cria um script de inicialização chamado /entrypoint.sh, que será executado quando o container iniciar.
+	if [ -n "$COCKPIT_USER" ]; then: Verifica se a variável de ambiente COCKPIT_USER foi definida (significa que o nome de usuário foi passado ao iniciar o container).
+	useradd -m $COCKPIT_USER: Cria o usuário com o nome fornecido pela variável COCKPIT_USER.
+	if [ -n "$COCKPIT_PASSWORD" ]; then: Se a variável de ambiente COCKPIT_PASSWORD foi definida (ou seja, se a senha foi fornecida), configura a senha para o usuário com chpasswd.
+	echo "$COCKPIT_USER:$COCKPIT_PASSWORD" | chpasswd: Altera a senha do usuário criado.Se a senha não for fornecida, o script apenas imprime uma mensagem dizendo que a senha não foi fornecida.
+	exec /usr/lib/cockpit/cockpit-ws --no-tls --port 9090: Inicia o servidor do Cockpit na porta 9090. O --no-tls desabilita a criptografia TLS (geralmente usado em ambientes de teste ou internos).
+	chmod +x /entrypoint.sh: Torna o script /entrypoint.sh executável, permitindo que ele seja executado quando o container for iniciado.
+	ENTRYPOINT ["/entrypoint.sh"]: Define o script /entrypoint.sh como o entrypoint do container. Isso significa que o Docker irá executar esse script automaticamente quando o container for iniciado.
+	VOLUME ["/run", "/host"]: Define volumes que serão montados ao rodar o container. O volume /run é geralmente usado para arquivos temporários do sistema e /host mapeia a estrutura do sistema de arquivos do host (somente leitura, se necessário). Isso permite que o Cockpit acesse dados temporários e o sistema de arquivos do host para monitoramento.
     
 3- Construa a imagem com o comando => docker build --network=host -t custom-cockpit .
+
     • docker build: Esse é o comando usado para construir (criar) uma nova imagem Docker a partir de um Dockerfile. O Dockerfile contém as instruções para configurar e instalar pacotes ou configurações no container.
     • --network=host: Esta opção especifica que o build da imagem será feito utilizando a rede do host (máquina física ou virtual que está executando o Docker). Isso significa que o container usado para construir a imagem terá a mesma rede que o host, permitindo acesso direto à internet e resolvendo problemas de DNS e rede que podem ocorrer em containers com redes isoladas. Quando o Docker utiliza a rede do host, o container compartilha o mesmo espaço de rede que a máquina física. Isso pode ser útil para garantir que o processo de build tenha acesso à internet e a servidores de pacotes como o deb.debian.org, o que pode ser problemático em redes isoladas ou com configurações de DNS inadequadas. Por padrão, containers Docker utilizam uma rede isolada, mas ao usar --network=host, isso pode resolver problemas de conectividade, como o erro Temporary failure resolving 'deb.debian.org', visto anteriormente.
     • -t custom-cockpit: A opção -t serve para atribuir uma "tag" (nome) à imagem Docker gerada. Nesse caso, a imagem será nomeada custom-cockpit. Você pode usar esse nome para rodar containers baseados nessa imagem posteriormente. O nome é útil para identificar a imagem de forma clara e para referência em outros comandos, como docker run.
     • .(ponto): O ponto final (.) indica o diretório onde o Dockerfile está localizado, ou seja, o diretório atual. O Docker irá procurar o Dockerfile nesse diretório e usá-lo para construir a imagem. Se o Dockerfile estiver em outro diretório, você pode especificar o caminho completo ou relativo para ele.
 	
-4- Para criar e rodar o container use o comando => docker run -d --name cockpit_amsouza --restart=always -p 9090:9090 --privileged -v /run:/run -v /:/host:ro custom-cockpit
-    • docker run: Este é o comando principal para iniciar um novo container com base em uma imagem Docker existente. Ele cria e executa um container a partir da imagem especificada.
-    • -d: Executa o container em segundo plano (modo detached).
-    • --name cockpit_amsouza: Define o nome do container como cockpit_amsouza, facilitando a identificação e o gerenciamento do container.
-    • --restart=always: Configura o container para reiniciar automaticamente em caso de falha, ou quando o Docker é reiniciado, garantindo alta disponibilidade.
-    • -p 9090:9090: Mapeia a porta 9090 do container para a porta 9090 do host, permitindo o acesso ao Cockpit na URL http://<IP_do_host>:9090.
-    • --privileged: Concede permissões elevadas ao container, o que é necessário para que o Cockpit acesse e gerencie o sistema do host.
-    • -v /run:/run e -v /:/host:ro: Montam volumes para permitir que o Cockpit visualize e acesse o sistema de arquivos e informações do host:
-		-v /run:/run: Permite acesso a informações em execução no host, como sockets do sistema.
-		-v /:/host:ro: Monta o sistema de arquivos do host no modo somente leitura, permitindo que o Cockpit visualize as configurações do sistema.
-5- Para acessar o cockpit pelo navegador => http://<ip_do_servidor>:9090 ou http://<nome_do_servidor>:9090
+4- Para criar e rodar o container use o comando => docker run -d --name cockpit_amsouza -e COCKPIT_USER=myuser -e COCKPIT_PASSWORD=mypassword --restart=always -v /run:/run -v /:/host:ro -p 9090:9090 --privileged custom-cockpit <= Neste exemplo, myuser seria o nome de usuário e mypassword a senha para acessar o Cockpit.
 
+    • docker run: Este é o comando principal para iniciar um novo container com base em uma imagem Docker existente. Ele cria e executa um container a partir da imagem especificada.
+   • -d: Executa o container em segundo plano (modo detached).
+   • --name cockpit_amsouza: Dá ao container o nome cockpit_amsouza.
+   • -e COCKPIT_USER=myuser: Define a variável de ambiente COCKPIT_USER para criar o usuário myuser no container.
+   • -e COCKPIT_PASSWORD=mypassword: Define a variável de ambiente COCKPIT_PASSWORD para configurar a senha do usuário myuser como mypassword.
+   • --restart=always: Configura o container para reiniciar automaticamente caso ele falhe ou o sistema seja reiniciado.
+   • -v /run:/run: Mapeia o diretório /run do host para o container, permitindo que dados temporários sejam compartilhados entre o host e o container.
+   • -v /:/host:ro: Mapeia o sistema de arquivos do host para o diretório /host dentro do container em modo somente leitura (ro), permitindo ao container acessar os arquivos do host sem modificá-los.
+   • -p 9090:9090: Mapeia a porta 9090 do container para a porta 9090 do host, permitindo acesso à interface do Cockpit.
+   • --privileged: Concede permissões adicionais ao container, permitindo acessar dispositivos e outras operações que normalmente são restritas.
+   • custom-cockpit: Nome da imagem Docker personalizada com a configuração do Cockpit.
+
+5- Para acessar o cockpit pelo navegador => http://<ip_do_servidor>:9090 ou http://<nome_do_servidor>:9090
+    • Observação.: Somente exibir informações básicas do sistema operacional
