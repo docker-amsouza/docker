@@ -1,0 +1,49 @@
+Instalando o Cockpit no Docker
+
+1- Crie o diretório => sudo mkdir -p cockpit
+2- Dentro do diretório, crei o arquivo => Dockerfile 
+    • sudo vi Dockerfile
+# Use Debian como imagem base
+FROM debian:latest
+
+# Atualiza os pacotes e instala o Cockpit
+RUN apt-get update && apt-get install -y apt-transport-https ca-certificates curl && \
+    apt-get install -y cockpit && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/**
+
+# Expõe a porta 9090 para acesso ao Cockpit
+EXPOSE 9090
+
+# Define as permissões e monta diretórios necessários
+VOLUME ["/run", "/host"]
+
+# Inicia o Cockpit no modo foreground
+CMD ["/usr/lib/cockpit/cockpit-ws", "--no-tls", "--port", "9090"]
+
+Explicação das Instruções:
+    FROM debian
+    : Usa a imagem Debian como base.
+    RUN apt-get update && apt-get install -y cockpit: Atualiza a lista de pacotes e instala o Cockpit.
+    EXPOSE 9090: Expõe a porta 9090 para permitir acesso externo ao Cockpit.
+    VOLUME ["/run", "/host"]: Monta volumes que permitem ao Cockpit acessar informações do sistema.
+    CMD ["/usr/lib/cockpit/cockpit-ws", "--no-tls", "--port", "9090"]: Inicia o Cockpit sem TLS na porta 9090.
+    
+3- Construa a imagem com o comando => docker build --network=host -t custom-cockpit .
+    • docker build: Esse é o comando usado para construir (criar) uma nova imagem Docker a partir de um Dockerfile. O Dockerfile contém as instruções para configurar e instalar pacotes ou configurações no container.
+    • --network=host: Esta opção especifica que o build da imagem será feito utilizando a rede do host (máquina física ou virtual que está executando o Docker). Isso significa que o container usado para construir a imagem terá a mesma rede que o host, permitindo acesso direto à internet e resolvendo problemas de DNS e rede que podem ocorrer em containers com redes isoladas. Quando o Docker utiliza a rede do host, o container compartilha o mesmo espaço de rede que a máquina física. Isso pode ser útil para garantir que o processo de build tenha acesso à internet e a servidores de pacotes como o deb.debian.org, o que pode ser problemático em redes isoladas ou com configurações de DNS inadequadas. Por padrão, containers Docker utilizam uma rede isolada, mas ao usar --network=host, isso pode resolver problemas de conectividade, como o erro Temporary failure resolving 'deb.debian.org', visto anteriormente.
+    • -t custom-cockpit: A opção -t serve para atribuir uma "tag" (nome) à imagem Docker gerada. Nesse caso, a imagem será nomeada custom-cockpit. Você pode usar esse nome para rodar containers baseados nessa imagem posteriormente. O nome é útil para identificar a imagem de forma clara e para referência em outros comandos, como docker run.
+    • .(ponto): O ponto final (.) indica o diretório onde o Dockerfile está localizado, ou seja, o diretório atual. O Docker irá procurar o Dockerfile nesse diretório e usá-lo para construir a imagem. Se o Dockerfile estiver em outro diretório, você pode especificar o caminho completo ou relativo para ele.
+	
+4- Para criar e rodar o container use o comando => docker run -d --name cockpit_amsouza --restart=always -p 9090:9090 --privileged -v /run:/run -v /:/host:ro custom-cockpit
+    • docker run: Este é o comando principal para iniciar um novo container com base em uma imagem Docker existente. Ele cria e executa um container a partir da imagem especificada.
+    • -d: Executa o container em segundo plano (modo detached).
+    • --name cockpit_amsouza: Define o nome do container como cockpit_amsouza, facilitando a identificação e o gerenciamento do container.
+    • --restart=always: Configura o container para reiniciar automaticamente em caso de falha, ou quando o Docker é reiniciado, garantindo alta disponibilidade.
+    • -p 9090:9090: Mapeia a porta 9090 do container para a porta 9090 do host, permitindo o acesso ao Cockpit na URL http://<IP_do_host>:9090.
+    • --privileged: Concede permissões elevadas ao container, o que é necessário para que o Cockpit acesse e gerencie o sistema do host.
+    • -v /run:/run e -v /:/host:ro: Montam volumes para permitir que o Cockpit visualize e acesse o sistema de arquivos e informações do host:
+		-v /run:/run: Permite acesso a informações em execução no host, como sockets do sistema.
+		-v /:/host:ro: Monta o sistema de arquivos do host no modo somente leitura, permitindo que o Cockpit visualize as configurações do sistema.
+5- Para acessar o cockpit pelo navegador => http://<ip_do_servidor>:9090 ou http://<nome_do_servidor>:9090
+
