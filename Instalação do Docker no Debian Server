@@ -2,7 +2,7 @@ Docker no DEBIAN SERVER
 
 versão 12.7.0
 
-Instalação
+      Instalação o Docker
 
 
 1- sudo apt-get update
@@ -16,8 +16,36 @@ Instalação
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
   
 7- sudo apt-get update
-8-  sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+8- sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 9- sudo usermod -a -G docker $USER => adicionando o seu usuário no grupo do Docker
 10- newgrp docker => fazendo login em um novo grupo do Docker
 11- sudo getent group docker => verificando informações do grupo Docker 
 12- id => verificando os identificadores de usuário e grupos
+
+      Instalação do docker-compose
+
+Atualize o sistema e instale as dependências =>
+1- sudo apt update
+2- sudo apt install -y curl jq
+3- Baixe a versão estável mais recente com o seguinte comando =>sudo curl -L "https://github.com/docker/compose/releases/download/v2.30.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose  <= Certifique-se de substituir v2.30.2 pela versão mais recente
+4- Dê permissão de execução ao Docker Compose => sudo chmod +x /usr/local/bin/docker-compose
+5- Após a instalação, verifique se o Docker Compose foi instalado corretamente => docker-compose --version o retorno deverá ser => Docker Compose version v2.30.2
+6- Verifique se os contêineres estão rodando => docker-compose ps
+7- Acesse os logs do contêiner para verificar se tudo está funcionando corretamente => docker-compose logs dns ou para ver os logs dentro do container => docker-compose logs
+8- Para reiniciar o container => 
+docker-compose down
+docker-compose up -d
+
+      Desinstalando o DOCKER
+
+1- sudo apt-get purge docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-ce-rootless-extras
+2- sudo rm -rf /var/lib/docker
+3- sudo rm -rf /var/lib/containerd
+4- sudo rm /etc/apt/sources.list.d/docker.list
+5- sudo rm /etc/apt/keyrings/docker.asc
+
+      Desinstalando o Docker-compose
+
+1- sudo apt-get remove docker-compose-plugin
+2- rm $DOCKER_CONFIG/cli-plugins/docker-compose
+3- rm /usr/local/lib/docker/cli-plugins/docker-compose
