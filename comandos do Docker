@@ -18,3 +18,4 @@ Comandos do docker:
     • docker exec -it <container_id> /bin/bash => para entrar no container
     • docker update --restart always <container_name_or_id> => Quando definida como always, isso significa que o Docker irá tentar reiniciar o container sempre que ele parar, seja por falha, reinicialização do Docker ou do sistema.
     • docker inspect --format '{{.Name}}: {{.HostConfig.RestartPolicy.Name}}' <nome do container> => para verificar se o container irá iniciar automaticamento após a reinicialização do sistema ou alguma falha, o retorno deverá ser: always
+    • docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' <container_id> => Esse comando retorna o endereço IP atribuído ao container dentro da rede bridge
