@@ -1,0 +1,126 @@
+1- Crie um diretório para o dns => mkdir -p dns/config/zones
+2- Crie o arquivo Dockerfile => cd dns/ 
+
+
+# Use uma imagem base do Debian ou Ubuntu
+FROM debian:latest
+
+# Instala o BIND9
+RUN apt-get update && \
+    apt-get install -y bind9 bind9utils bind9-doc && \
+    rm -rf /var/lib/apt/lists/*
+
+# Cria o diretório de configuração do BIND (se necessário)
+RUN mkdir -p /etc/bind
+
+# Copia os arquivos de configuração locais para o container
+COPY ./config /etc/bind
+
+# Expõe a porta 53 para consultas DNS (TCP e UDP)
+EXPOSE 53/tcp 53/udp
+
+3- Entre no diretório => cd dns/config/
+4- Crie os arquivos named.conf, named.conf.options e named.conf.local
+
+    • Arquivo => sudo vi named.conf 
+
+// Definição de opções globais
+include "/etc/bind/named.conf.options";
+
+// Configuração das zonas
+include "/etc/bind/named.conf.local";
+
+// Arquivos de zona raiz (necessário para servidores recursivos)
+// include "/etc/bind/named.conf.default-zones";
+
+    • Arquivo => sudo vi named.conf.options 
+
+options {
+    directory "/var/cache/bind";
+
+    // DNS recursivo para redes locais
+    allow-query { any; };
+
+    // Habilitar recursão para resolver nomes externos
+    recursion yes;
+
+    // Permite que a interface escute em qualquer IP
+    listen-on { 172.17.0.5; };
+    listen-on-v6 { none; };
+
+    // Servidores DNS que o BIND usará para resolver nomes
+    forwarders {
+        9.9.9.9;   // Quad9 DNS
+        149.112.112.112;   // Quad9 DNS
+    };
+};
+    • Arquivo => sudo vi named.conf.local 
+
+zone "amsouza.docker" {
+    type master;
+    file "/etc/bind/zones/db.amsouza.docker";
+};
+
+zone "1.168.192.in-addr.arpa" {
+    type master;
+    file "/etc/bind/zones/db.192.docker";
+};
+
+5- Crie as zones db.amsouza.docker e db.192.docker => cd dns/config/zones 
+
+    • sudo vi db.amsouza.docker
+
+$TTL 86400
+@	IN SOA servidor.amsouza.docker. root.amsouza.docker. (
+	101124 ; Serial
+	86400 ; Refresh
+	86400 ; Retry
+	86400 ; Expire
+	86400 ) ; Negative Cache TTL
+
+@		IN NS servidor.amsouza.docker.
+Servidor	IN A 192.168.1.254
+
+    • sudo vi db.192.docker 
+	
+$TTL 86400
+@	IN SOA servidor.amsouza.docker. root.amsouza.docker. (
+	101124	; Serial
+	86400	; Refresh
+	86400	; Retry
+	86400	; Expire
+	86400 ) ; Negative Cache TTL
+@		IN NS servidor.amsouza.docker.
+Servidor	IN A 192.168.1.254
+192.168.1.254	IN PTR servidor
+
+8- Para criar a imagem Dockerfile => docker build -t meu-dns-server .
+
+    • docker build: Esse comando instrui o Docker a construir uma imagem a partir de um Dockerfile. Ele lê o arquivo Dockerfile no diretório atual, que contém instruções sobre como configurar o ambiente da imagem, instalar pacotes, copiar arquivos, definir variáveis, entre outros.
+    • -t meu-dns-server: A flag -t (ou --tag) permite atribuir um nome (tag) à imagem que será criada. No caso, a imagem será nomeada como meu-dns-server, o que facilita sua identificação e execução. Com esse nome, você pode se referir a essa imagem facilmente para executá-la com docker run, ou fazer o upload para um repositório como o Docker Hub.
+      
+    • . (ponto): O ponto final especifica o contexto de build, que é o diretório atual. O Docker inclui todos os arquivos e diretórios do contexto de build, permitindo o acesso aos arquivos mencionados no Dockerfile durante a construção. Isso significa que se o Dockerfile inclui instruções como COPY config /etc/bind, o Docker vai buscar o diretório config no contexto de build para copiar para a imagem.
+
+9- Criar e executar o Contêiner => docker run -d --name dns_amsouza --restart=always -p 53:53/tcp -p 53:53/udp -v /home/amsouza/dns/config:/etc/bind meu-dns-server
+
+Explicação do comando:
+
+    • docker run: Este é o comando principal para iniciar um novo container com base em uma imagem Docker existente. Ele cria e executa um container a partir da imagem especificada.
+    • -d (modo detached): A flag -d faz o Docker executar o container em segundo plano, ou seja, em "modo destacado". Isso permite que o terminal de onde o comando foi executado continue disponível para outros comandos sem bloquear a execução do container.
+    • --name dns_amsouza: A opção --name define um nome para o container em execução. Nesse caso, o nome dado é dns_amsouza. Isso facilita a identificação e a manipulação do container posteriormente (como docker stop dns_amsouza, docker logs dns_amsouza, etc.).
+    • --restart=always: Esta flag configura o Docker para reiniciar automaticamente o container caso ele pare, seja devido a falhas ou reinicializações do sistema. Always significa que o container será reiniciado sempre que o Docker ou o sistema forem reiniciados, garantindo que o servidor DNS continue funcionando sem intervenção manual.
+    • -p 53:53/tcp -p 53:53/udp: A flag -p mapeia as portas do host para o container. Neste caso: -p 53:53/tcp: Mapeia a porta TCP 53 do host para a porta TCP 53 no container. A porta 53 é usada para consultas DNS via TCP. -p 53:53/udp: Mapeia a porta UDP 53 do host para a porta UDP 53 no container. O DNS também usa UDP, especialmente para consultas rápidas. Com isso, as consultas DNS podem ser feitas ao container através das portas 53 TCP e UDP do host.
+    • -v /home/amsouza/dns/config:/etc/bind: A flag -v monta um volume do sistema host dentro do container. Aqui: /home/amsouza/dns/config é o diretório no host que contém os arquivos de configuração do DNS (como named.conf, db.amsouza.docker, etc.). /etc/bind é o diretório dentro do container onde o BIND espera encontrar seus arquivos de configuração. Dessa forma, os arquivos de configuração do servidor DNS são compartilhados entre o host e o container, permitindo que o servidor use as configurações personalizadas no container.
+    • meu-dns-server: Este é o nome da imagem Docker que será utilizada para criar o container. A imagem meu-dns-server deve já ter sido construída previamente com o comando docker build e contém a configuração do BIND para ser executado como um servidor DNS.
+
+10- Estrutura de Arquivos:
+
+dns/
+├── Dockerfile
+├── config/
+│   ├── named.conf
+│   ├── named.conf.options
+│   ├── named.conf.local
+│   └── zones/
+│       └── db.amsouza.docker
+│       └── db.192.docker
