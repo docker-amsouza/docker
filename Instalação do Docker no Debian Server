@@ -32,9 +32,9 @@ Atualize o sistema e instale as dependências =>
 
 1- sudo apt update
 2- sudo apt install -y curl jq
-3- Baixe a versão estável mais recente com o seguinte comando =>sudo curl -L "https://github.com/docker/compose/releases/download/v2.30.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose  <= Certifique-se de substituir v2.30.2 pela versão mais recente
+3- Baixe a versão estável mais recente com o seguinte comando => sudo curl -L "https://github.com/docker/compose/releases/download/v2.30.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose  <= Certifique-se de substituir v2.30.2 pela versão mais recente
 4- Dê permissão de execução ao Docker Compose => sudo chmod +x /usr/local/bin/docker-compose
-5- Após a instalação, verifique se o Docker Compose foi instalado corretamente => docker-compose --version o retorno deverá ser => Docker Compose version v2.30.2
+5- Após a instalação, verifique se o Docker Compose foi instalado corretamente => docker-compose --version o retorno deverá ser => Docker Compose version v2.30.3
 6- Verifique se os contêineres estão rodando => docker-compose ps
 7- Acesse os logs do contêiner para verificar se tudo está funcionando corretamente => docker-compose logs dns ou para ver os logs dentro do container => docker-compose logs
 8- Para reiniciar o container => 
