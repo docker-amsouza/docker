@@ -87,4 +87,4 @@ rm -rf /var/lib/apt/lists/*: Remove arquivos temporários de listas de pacotes p
    • custom-cockpit: Nome da imagem Docker personalizada com a configuração do Cockpit.
 
 5- Para acessar o cockpit pelo navegador => http://<ip_do_servidor>:9090 ou http://<nome_do_servidor>:9090
-    • Observação.: Somente exibir informações básicas do sistema operacional
+    • Observação.: Somente irá exibir informações básicas do sistema operacional.
