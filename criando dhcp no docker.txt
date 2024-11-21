@@ -5,18 +5,9 @@ Criando o container DHCP no Docker
 
 1- criar uma pasta => sudo mkdir -p data
     • O parâmetro -p significa que, se algum diretório no caminho já existir, ele não dará erro, e se algum diretório intermediário do caminho não existir, ele será criado automaticamente.
-2- touch datmkdir -p data/dhcpd.conf => Confirma que o arquivo de configuração está dentro de data 
+2- touch data/dhcpd.conf => cria um arquivo vazio chamado dhcpd.conf dentro do diretório data, desde que o diretório data já exista. 
 3- chmod 644 data/dhcpd.conf => permiti o container ler o arquivo dhcpd.conf
-2- dentro dessa pasta data vou criar o dhcpd.conf => sudo vi dhcpd.conf
-3- para rodar o container => docker run -it --init --restart always --net host -v "$(pwd)/data":/data networkboot/dhcpd eno2
-    • docker run: Comando que inicia um novo contêiner.
-    • -it: Executa o contêiner de forma interativa e aloca um terminal. Isso permite ver os logs do servidor DHCP em tempo real diretamente no terminal.
-    • --init: Configura o contêiner para usar um processo de inicialização. Isso ajuda a gerenciar sinais e processos filhos, tornando o contêiner mais robusto.
-    • --restart always: Faz o container reiniciar automaticamente após falhas ou reinicialização do sistema.
-    • --net host: Faz com que o contêiner use a rede do host diretamente. O servidor DHCP precisa dessa configuração para atribuir endereços IP às máquinas na rede local.
-    • -v "$(pwd)/data":/data: Monta o diretório data localizado no seu diretório atual ($(pwd)) dentro do contêiner no caminho /data. Isso pode ser usado para armazenar configurações ou logs do servidor DHCP fora do contêiner.
-    • networkboot/dhcpd: A imagem do Docker que fornece o servidor DHCP.
-    • eno2: O nome da interface de rede do host que o servidor DHCP usará. Esse nome precisa ser ajustado de acordo com a interface de rede correta do seu sistema. Você pode verificar o nome da interface com o comando ip a ou ifconfig.
+2- dentro dessa pasta data vou editar o dhcpd.conf => sudo vi dhcpd.conf
 
 Deverão alterar: nome, IP e mac, de acordo com seu ambiente.
 
@@ -62,3 +53,16 @@ host amsouza {
 	hardware  ethernet  dd:cc:00:bb:aa:11;
 	fixed-address 10.5.5.15;
 }
+
+3- para rodar o container => docker run -it --init --restart always --net host -v "$(pwd)/data":/data networkboot/dhcpd eno2
+
+Explicação:
+
+    • docker run: Comando que inicia um novo contêiner.
+    • -it: Executa o contêiner de forma interativa e aloca um terminal. Isso permite ver os logs do servidor DHCP em tempo real diretamente no terminal.
+    • --init: Configura o contêiner para usar um processo de inicialização. Isso ajuda a gerenciar sinais e processos filhos, tornando o contêiner mais robusto.
+    • --restart always: Faz o container reiniciar automaticamente após falhas ou reinicialização do sistema.
+    • --net host: Faz com que o contêiner use a rede do host diretamente. O servidor DHCP precisa dessa configuração para atribuir endereços IP às máquinas na rede local.
+    • -v "$(pwd)/data":/data: Monta o diretório data localizado no seu diretório atual ($(pwd)) dentro do contêiner no caminho /data. Isso pode ser usado para armazenar configurações ou logs do servidor DHCP fora do contêiner.
+    • networkboot/dhcpd: A imagem do Docker que fornece o servidor DHCP.
+    • eno2: O nome da interface de rede do host que o servidor DHCP usará para ouvir as solicitações DHCP. Esse nome precisa ser ajustado de acordo com a interface de rede correta do seu sistema. Você pode verificar o nome da interface com o comando ip a ou ifconfig.
