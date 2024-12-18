@@ -10,8 +10,8 @@
 
 scrape_configs:
   - job_name: 'snmp'
-    scrape_interval: 60s                            # Intervalo de coleta
-    scrape_timeout: 30s                             # Tempo máximo para coleta
+    scrape_interval: 60s                            # Intervalo de coleta.
+    scrape_timeout: 30s                             # Tempo máximo para coleta.
     static_configs:
       - targets:
           - 172.188.10.1                            # Altere o IP de acordo com a sua rede.
@@ -19,7 +19,7 @@ scrape_configs:
           - 172.188.10.5                            # Altere o IP de acordo com a sua rede.
           - 172.188.10.7                            # Altere o IP de acordo com a sua rede.
 
-    metrics_path: /metrics                          # Alterado para o caminho correto de métricas
+    metrics_path: /metrics                          # Alterado para o caminho correto de métricas.
     params:
       auth: [public_v2]
       module: [if_mib]
@@ -44,6 +44,7 @@ scrape_configs:
                 Altere o IP de acordo com a sua rede.
 
 A. Explicação do comando:
+
     docker network create --subnet=172.188.0.0/16 monitoring
 
     • docker network create: Este comando é usado para criar uma nova rede Docker. Quando você cria uma rede, os containers podem se comunicar entre si dentro dessa rede, usando seus nomes ou endereços IPs.
@@ -51,6 +52,7 @@ A. Explicação do comando:
     • monitoring: Este é o nome da rede que está sendo criada. O nome monitoring será utilizado para referenciar a rede ao conectar containers a ela ou ao realizar operações na rede. Pode ser qualquer nome que você escolher, mas é importante garantir que seja único no ambiente Docker.
 
 B. Explicação do comando:
+
     docker run --name prometheus --privileged --restart=always --net monitoring --ip 172.188.0.4 -v /path/to/prometheus.yml:/etc/prometheus/prometheus.yml -d -p 9090:9090 prom/prometheus
 
     • docker run: Este comando é usado para criar e iniciar um container Docker baseado em uma imagem.
@@ -65,6 +67,7 @@ B. Explicação do comando:
     • prom/prometheus: Especifica a imagem Docker que será usada para criar o container. Neste caso, está sendo utilizada a imagem oficial do Prometheus, prom/prometheus.
 
 C. Explicação do comando:
+
     docker run --name snmpexporter --privileged --restart=always --net monitoring --ip 172.188.0.2 -v /path/to/snmp.yml:/etc/snmp_exporter/snmp.yml -d -p 9116:9116 prom/snmp-exporter
 
     • docker run: Este comando é usado para criar e iniciar um container baseado em uma imagem Docker.
@@ -79,6 +82,7 @@ C. Explicação do comando:
     • prom/snmp-exporter: Indica a imagem Docker que será usada para criar o container. Nesse caso, é o SNMP Exporter oficial para Prometheus.
 
 D. Explicação do comando:
+
     docker run --name grafana --restart=always --net monitoring --ip 172.188.0.5 -v /path/to/grafana/data:/var/lib/grafana -d -p 3000:3000 grafana/grafana-oss
 
     • docker run: Inicia um container baseado em uma imagem Docker.
