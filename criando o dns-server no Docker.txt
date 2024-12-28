@@ -1,6 +1,6 @@
-1- Crie um diretório para o dns => mkdir -p dns/config/zones
+1- Crie um diretório para o dns => sudo mkdir -p dns/config/zones
 2- Crie o arquivo Dockerfile => cd dns/ 
-
+3- Criando o Dockerfile => sudo vi Dockerfile 
 
 # Use uma imagem base do Debian ou Ubuntu
 FROM debian:latest
@@ -19,8 +19,8 @@ COPY ./config /etc/bind
 # Expõe a porta 53 para consultas DNS (TCP e UDP)
 EXPOSE 53/tcp 53/udp
 
-3- Entre no diretório => cd dns/config/
-4- Crie os arquivos named.conf, named.conf.options e named.conf.local
+4- Entre no diretório => cd dns/config/
+5- Crie os arquivos named.conf, named.conf.options e named.conf.local
 
     • Arquivo => sudo vi named.conf 
 
@@ -33,25 +33,27 @@ include "/etc/bind/named.conf.local";
 // Arquivos de zona raiz (necessário para servidores recursivos)
 // include "/etc/bind/named.conf.default-zones";
 
-    • Arquivo => sudo vi named.conf.options 
+    • Arquivo => sudo vi named.conf.options => Servidor DNS autoritário com consulta externa a domínios
 
 options {
     directory "/var/cache/bind";
 
-    // DNS recursivo para redes locais
-    allow-query { any; };
+    // Essa configuração é uma restrição de acesso baseada em IP, e permite apenas que dispositivos localizados nas redes especificadas possam consultar o servidor DNS.
+    allow-query { adicione aqui o network que poderá fazer consultas no seu servidor ex: 192.168.0.0/24; };
 
-    // Habilitar recursão para resolver nomes externos
+    // Habilitar recursão para permitir resolução de nomes externos
     recursion yes;
 
-    // Permite que a interface escute em qualquer IP
-    listen-on { 172.17.0.5; };
-    listen-on-v6 { none; };
+    // Permite que a interface escute no IP 192.168.0.254
+    listen-on { 192.168.0.254; };  // Apenas este IP específico
 
-    // Servidores DNS que o BIND usará para resolver nomes
+    listen-on-v6 { none; };  // Desativa escuta para IPv6
+
+    // Encaminhamento de consultas para servidores DNS externos
     forwarders {
-        9.9.9.9;   // Quad9 DNS
-        149.112.112.112;   // Quad9 DNS
+        1.1.1.2;   // Cloudflare DNS com proteção extra contra malwares
+        1.0.0.2;   // Cloudflare DNS com proteção extra contra malwares
+        // Adicione outros servidores de sua preferência
     };
 };
     • Arquivo => sudo vi named.conf.local 
@@ -66,7 +68,7 @@ zone "1.168.192.in-addr.arpa" {
     file "/etc/bind/zones/db.192.docker";
 };
 
-5- Crie as zones db.amsouza.docker e db.192.docker => cd dns/config/zones 
+6- Crie as zones db.amsouza.docker e db.192.docker => cd dns/config/zones 
 
     • sudo vi db.amsouza.docker
 
@@ -79,7 +81,7 @@ $TTL 86400
 	86400 ) ; Negative Cache TTL
 
 @		IN NS servidor.amsouza.docker.
-Servidor	IN A 192.168.1.254
+Servidor	IN A 192.168.0.254
 
     • sudo vi db.192.docker 
 	
@@ -91,17 +93,16 @@ $TTL 86400
 	86400	; Expire
 	86400 ) ; Negative Cache TTL
 @		IN NS servidor.amsouza.docker.
-Servidor	IN A 192.168.1.254
-192.168.1.254	IN PTR servidor
+Servidor	IN A 192.168.0.254
+192.168.0.254	IN PTR servidor
 
-8- Para criar a imagem Dockerfile => docker build -t meu-dns-server .
+7- Para criar a imagem Dockerfile => docker build -t meu-dns-server .
 
     • docker build: Esse comando instrui o Docker a construir uma imagem a partir de um Dockerfile. Ele lê o arquivo Dockerfile no diretório atual, que contém instruções sobre como configurar o ambiente da imagem, instalar pacotes, copiar arquivos, definir variáveis, entre outros.
-    • -t meu-dns-server: A flag -t (ou --tag) permite atribuir um nome (tag) à imagem que será criada. No caso, a imagem será nomeada como meu-dns-server, o que facilita sua identificação e execução. Com esse nome, você pode se referir a essa imagem facilmente para executá-la com docker run, ou fazer o upload para um repositório como o Docker Hub.
-      
+    • -t meu-dns-server: A flag -t (ou --tag) permite atribuir um nome (tag) à imagem que será criada. No caso, a imagem será nomeada como meu-dns-server, o que facilita sua identificação e execução. Com esse nome, você pode se referir a essa imagem facilmente para executá-la com docker run, ou fazer o upload para um repositório como o Docker Hub.    
     • . (ponto): O ponto final especifica o contexto de build, que é o diretório atual. O Docker inclui todos os arquivos e diretórios do contexto de build, permitindo o acesso aos arquivos mencionados no Dockerfile durante a construção. Isso significa que se o Dockerfile inclui instruções como COPY config /etc/bind, o Docker vai buscar o diretório config no contexto de build para copiar para a imagem.
 
-9- Criar e executar o Contêiner => docker run -d --name dns_amsouza --restart=always --network host -p 53:53/tcp -p 53:53/udp -v /home/amsouza/dns/config:/etc/bind meu-dns-server
+8- Criar e executar o Contêiner => docker run -d --name dns_amsouza --restart=always --network host -p 53:53/tcp -p 53:53/udp -v /home/amsouza/dns/config:/etc/bind meu-dns-server
 
 Explicação do comando:
 
@@ -114,7 +115,7 @@ Explicação do comando:
     • -v /home/amsouza/dns/config:/etc/bind: A flag -v monta um volume do sistema host dentro do container. Aqui: /home/amsouza/dns/config é o diretório no host que contém os arquivos de configuração do DNS (como named.conf, db.amsouza.docker, etc.). /etc/bind é o diretório dentro do container onde o BIND espera encontrar seus arquivos de configuração. Dessa forma, os arquivos de configuração do servidor DNS são compartilhados entre o host e o container, permitindo que o servidor use as configurações personalizadas no container.
     • meu-dns-server: Este é o nome da imagem Docker que será utilizada para criar o container. A imagem meu-dns-server deve já ter sido construída previamente com o comando docker build e contém a configuração do BIND para ser executado como um servidor DNS.
 
-10- Estrutura de Arquivos:
+9- Estrutura de Arquivos:
 
 dns/
 ├── Dockerfile
